@@ -84,10 +84,11 @@ async def extract_marks(image: UploadFile = File(...), user: dict = Depends(veri
     user_doc = user_ref.get()
     
     from datetime import datetime, timezone
+    from google.cloud import firestore
+    
     DAILY_CREDIT_LIMIT = 50
     
     if not user_doc.exists:
-        from google.cloud import firestore
         user_ref.set({
             'credits_remaining': DAILY_CREDIT_LIMIT,
             'last_credit_reset': firestore.SERVER_TIMESTAMP
@@ -98,8 +99,6 @@ async def extract_marks(image: UploadFile = File(...), user: dict = Depends(veri
         user_data = user_doc.to_dict()
         credits = user_data.get('credits_remaining', 0)
     
-    from datetime import datetime, timezone
-    DAILY_CREDIT_LIMIT = 50
     last_reset = user_data.get('last_credit_reset')
     today = datetime.now(timezone.utc).date()
     
