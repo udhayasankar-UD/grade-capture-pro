@@ -80,14 +80,39 @@ async def extract_marks(image: UploadFile = File(...), user: dict = Depends(veri
     uid = user['uid']
     user_ref = db.collection('user').document(uid)
     
-    # 1. Check Credits
+    # 1. Check Credits (with daily reset logic)
     user_doc = user_ref.get()
     if not user_doc.exists:
         raise HTTPException(status_code=403, detail="User record not found in database. Contact Admin.")
     
-    credits = user_doc.to_dict().get('credits_remaining', 0)
+    user_data = user_doc.to_dict()
+    credits = user_data.get('credits_remaining', 0)
+    
+    # Daily reset check
+    from datetime import datetime, timezone
+    DAILY_CREDIT_LIMIT = 50
+    last_reset = user_data.get('last_credit_reset')
+    today = datetime.now(timezone.utc).date()
+    
+    needs_reset = True
+    if last_reset:
+        # Firestore Timestamp → Python datetime
+        last_reset_date = last_reset.date() if hasattr(last_reset, 'date') else last_reset
+        if hasattr(last_reset_date, 'year'):
+            needs_reset = last_reset_date < today
+        else:
+            needs_reset = True
+    
+    if needs_reset:
+        user_ref.update({
+            "credits_remaining": DAILY_CREDIT_LIMIT,
+            "last_credit_reset": firestore.SERVER_TIMESTAMP,
+        })
+        credits = DAILY_CREDIT_LIMIT
+        print(f"✅ Daily credit reset for user {uid}: {credits} credits")
+    
     if credits <= 0:
-        raise HTTPException(status_code=402, detail="Out of credits. Please contact administrator.")
+        raise HTTPException(status_code=402, detail="Out of credits. Credits reset daily at midnight UTC.")
 
     if not image.filename:
         raise HTTPException(status_code=400, detail="No file uploaded")

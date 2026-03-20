@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect } from "react";
-import { User as UserIcon, LogOut, ChevronDown, Coins } from "lucide-react";
+import { User as UserIcon, LogOut, ChevronDown, Coins, Settings as SettingsIcon } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { SettingsModal } from "@/components/SettingsModal";
 
 export function ProfileMenu() {
   const { user, credits, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -62,6 +64,15 @@ export function ProfileMenu() {
               <span className="text-base font-data font-extrabold text-[#34A853]">{credits}</span>
             </div>
           </div>
+          <div className="p-2 border-b border-border">
+            <button
+              onClick={() => { setIsSettingsOpen(true); setIsOpen(false); }}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm font-heading font-semibold text-foreground hover:bg-muted rounded-lg transition-colors"
+            >
+              <SettingsIcon className="w-4 h-4 text-muted-foreground" />
+              Settings
+            </button>
+          </div>
           <div className="p-2">
             <button
               onClick={logout}
@@ -73,6 +84,8 @@ export function ProfileMenu() {
           </div>
         </div>
       )}
+
+      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
     </div>
   );
 }

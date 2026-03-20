@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged, User, signOut } from "firebase/auth";
 import { doc, onSnapshot } from "firebase/firestore";
 import { auth, db } from "./firebase";
+import { checkAndResetDailyCredits } from "./firestore-service";
 
 interface AuthContextType {
   user: User | null;
@@ -22,6 +23,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(currentUser);
       
       if (currentUser) {
+        // Check and reset daily credits first
+        checkAndResetDailyCredits(currentUser.uid).catch(err => {
+          console.error("Daily credit reset check failed:", err);
+        });
+
         // Listen to credit updates from Firestore
         const userRef = doc(db, "user", currentUser.uid);
         const unsubscribeFirestore = onSnapshot(userRef, (doc) => {

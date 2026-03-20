@@ -12,7 +12,7 @@
 
 ## Overview
 
-**Thaal** bridges the physical world of grading with modern digital school administration. By leveraging Google's **Gemini OCR** and an advanced React frontend, Thaal intelligently reads complex handwritten answer grids, securely verifies student marks, flags grading errors, and perfectly aligns the captured data into your school's master class rosters via CSV.
+**Thaal** bridges the physical world of grading with modern digital school administration. By leveraging Google's **Gemini OCR** and an advanced React frontend, Thaal intelligently reads complex handwritten answer grids, securely verifies student marks, flags grading errors, and perfectly aligns the captured data into your school's master class Lists via CSV.
 
 ---
 
