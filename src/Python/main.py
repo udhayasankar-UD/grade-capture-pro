@@ -82,13 +82,22 @@ async def extract_marks(image: UploadFile = File(...), user: dict = Depends(veri
     
     # 1. Check Credits (with daily reset logic)
     user_doc = user_ref.get()
+    
+    from datetime import datetime, timezone
+    DAILY_CREDIT_LIMIT = 50
+    
     if not user_doc.exists:
-        raise HTTPException(status_code=403, detail="User record not found in database. Contact Admin.")
+        from google.cloud import firestore
+        user_ref.set({
+            'credits_remaining': DAILY_CREDIT_LIMIT,
+            'last_credit_reset': firestore.SERVER_TIMESTAMP
+        })
+        user_data = {'credits_remaining': DAILY_CREDIT_LIMIT, 'last_credit_reset': None}
+        credits = DAILY_CREDIT_LIMIT
+    else:
+        user_data = user_doc.to_dict()
+        credits = user_data.get('credits_remaining', 0)
     
-    user_data = user_doc.to_dict()
-    credits = user_data.get('credits_remaining', 0)
-    
-    # Daily reset check
     from datetime import datetime, timezone
     DAILY_CREDIT_LIMIT = 50
     last_reset = user_data.get('last_credit_reset')

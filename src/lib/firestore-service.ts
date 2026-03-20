@@ -113,7 +113,14 @@ export async function checkAndResetDailyCredits(userId: string): Promise<number>
   const userRef = doc(db, "user", userId);
   const snap = await getDoc(userRef);
 
-  if (!snap.exists()) return 0;
+  if (!snap.exists()) {
+    // First time user login -> initialize with 50 credits
+    await setDoc(userRef, {
+      credits_remaining: DAILY_CREDIT_LIMIT,
+      last_credit_reset: serverTimestamp(),
+    });
+    return DAILY_CREDIT_LIMIT;
+  }
 
   const userData = snap.data();
   const lastResetDate = userData.last_credit_reset?.toDate?.() || null;
