@@ -312,12 +312,12 @@ export function VerificationWorkspace({ csvState, csvFileName, answerSheetUrl, i
                         {arr.map((pair, i) => (
                           <div key={i} className="grid grid-cols-[1fr_1fr_1fr_auto_1fr] items-center px-2 sm:px-4 py-3 sm:py-4 gap-2 sm:gap-4 hover:bg-muted/10 transition-colors">
                             <span className="font-data text-sm sm:text-base text-foreground font-medium">Q{startQ + i}</span>
-                            <MarkSelect value={pair.a} field={`parts.${part.id}.${i}.a`} rowField={`parts.${part.id}.${i}`} errors={errors} max={part.maxMarks} allowHalfMarks={true} onChange={(v) => {
+                            <MarkSelect value={pair.a} field={`parts.${part.id}.${i}.a`} rowField={`parts.${part.id}.${i}`} errors={errors} max={part.maxMarks} allowHalfMarks={false} onChange={(v) => {
                               const newArr = [...arr];
                               newArr[i] = {...newArr[i], a: v};
                               setMarkData(d => ({...d, parts: {...d.parts, [part.id]: newArr}}));
                             }} />
-                            <MarkSelect value={pair.b} field={`parts.${part.id}.${i}.b`} rowField={`parts.${part.id}.${i}`} errors={errors} max={part.maxMarks} allowHalfMarks={true} onChange={(v) => {
+                            <MarkSelect value={pair.b} field={`parts.${part.id}.${i}.b`} rowField={`parts.${part.id}.${i}`} errors={errors} max={part.maxMarks} allowHalfMarks={false} onChange={(v) => {
                               const newArr = [...arr];
                               newArr[i] = {...newArr[i], b: v};
                               setMarkData(d => ({...d, parts: {...d.parts, [part.id]: newArr}}));
@@ -325,7 +325,11 @@ export function VerificationWorkspace({ csvState, csvFileName, answerSheetUrl, i
                             <div className="flex justify-center shrink-0">
                               <button
                                 onClick={() => {
-                                  const isB = pair.b > pair.a;
+                                  let isB = pair.b > pair.a;
+                                  // if they are equal, intelligently add to the one that currently has a mark (or A if both 0)
+                                  if (pair.a === pair.b) {
+                                    isB = false; // default to A
+                                  }
                                   const newArr = [...arr];
                                   if (isB) newArr[i] = {...newArr[i], b: Math.min(part.maxMarks, pair.b + 0.5)};
                                   else newArr[i] = {...newArr[i], a: Math.min(part.maxMarks, pair.a + 0.5)};

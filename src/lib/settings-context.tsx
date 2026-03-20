@@ -20,7 +20,6 @@ export const defaultSettings: AppSettings = {
     { id: "A", name: "Part A", enabled: true, type: "single", questionCount: 5, maxMarks: 2 },
     { id: "B", name: "Part B", enabled: true, type: "choice", questionCount: 5, maxMarks: 4 },
     { id: "C", name: "Part C", enabled: true, type: "choice", questionCount: 5, maxMarks: 7 },
-    { id: "D", name: "Part D", enabled: false, type: "choice", questionCount: 5, maxMarks: 10 },
   ],
 };
 
