@@ -51,9 +51,12 @@ except Exception as e:
 app = FastAPI()
 
 # Allow frontend to talk to this backend
+frontend_url = os.getenv("FRONTEND_URL", "*")
+origins = [url.strip() for url in frontend_url.split(",")] if frontend_url != "*" else ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Allow all origins for local testing
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

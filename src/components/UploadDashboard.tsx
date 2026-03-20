@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { FileText, Camera, Zap, GraduationCap } from "lucide-react";
+import { ProfileMenu } from "@/components/ProfileMenu";
 
 interface UploadDashboardProps {
   csvFile: File | null;
@@ -75,11 +76,14 @@ export function UploadDashboard({
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="border-b border-border bg-card px-8 py-5 flex items-center gap-4">
-        <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-          <GraduationCap className="w-6 h-6 text-primary-foreground" />
+      <header className="border-b border-border bg-card px-4 md:px-8 py-4 flex items-center justify-between shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
+            <GraduationCap className="w-6 h-6 text-primary-foreground" />
+          </div>
+          <span className="font-heading font-bold text-primary text-xl">Thaal</span>
         </div>
-        <span className="font-heading font-bold text-primary text-xl">Thaal</span>
+        <ProfileMenu />
       </header>
 
       <main className="flex-1 max-w-3xl w-full mx-auto px-6 py-12">

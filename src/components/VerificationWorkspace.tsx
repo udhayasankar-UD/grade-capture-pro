@@ -3,6 +3,7 @@ import { ArrowLeft, RotateCcw, SkipForward, AlertCircle, Save, ZoomIn, ZoomOut, 
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { MarkData, ValidationError, createEmptyMarkData, validateMarks, calculateTotals } from "@/lib/types";
 import { CSVState, findRowByRegNo, markDataToRow, generateCSV, getRegisteredNumbers } from "@/lib/csv-utils";
+import { ProfileMenu } from "@/components/ProfileMenu";
 
 interface VerificationWorkspaceProps {
   csvState: CSVState;
@@ -16,6 +17,7 @@ interface VerificationWorkspaceProps {
 function MarkSelect({
   value,
   field,
+  rowField,
   errors,
   max,
   allowHalfMarks = false,
@@ -23,12 +25,15 @@ function MarkSelect({
 }: {
   value: number;
   field: string;
+  rowField?: string;
   errors: ValidationError[];
   max: number;
   allowHalfMarks?: boolean;
   onChange: (val: number) => void;
 }) {
-  const error = errors.find((e) => e.field === field);
+  const specificError = errors.find((e) => e.field === field);
+  const rowError = rowField ? errors.find((e) => e.field === rowField) : undefined;
+  const error = specificError || rowError;
   const isError = !!error;
   
   const optionsSet = new Set<number>();
@@ -111,8 +116,8 @@ function PartTable({
           {data.map((pair, i) => (
             <div key={i} className="grid grid-cols-[1fr_1fr_1fr_auto_1fr] items-center px-2 sm:px-4 py-3 sm:py-4 gap-2 sm:gap-4 hover:bg-muted/10 transition-colors">
               <span className="font-data text-sm sm:text-base text-foreground font-medium">Q{startQ + i}</span>
-              <MarkSelect value={pair.a} field={`${fieldPrefix}.${i}.a`} errors={errors} max={max} onChange={(v) => onChange(i, "a", v)} />
-              <MarkSelect value={pair.b} field={`${fieldPrefix}.${i}.b`} errors={errors} max={max} onChange={(v) => onChange(i, "b", v)} />
+              <MarkSelect value={pair.a} field={`${fieldPrefix}.${i}.a`} rowField={`${fieldPrefix}.${i}`} errors={errors} max={max} onChange={(v) => onChange(i, "a", v)} />
+              <MarkSelect value={pair.b} field={`${fieldPrefix}.${i}.b`} rowField={`${fieldPrefix}.${i}`} errors={errors} max={max} onChange={(v) => onChange(i, "b", v)} />
               <div className="flex justify-center shrink-0">
                 <button
                   onClick={() => {
@@ -273,6 +278,8 @@ export function VerificationWorkspace({ csvState, csvFileName, answerSheetUrl, i
           <button className="p-2 sm:p-2.5 rounded-lg text-muted-foreground hover:bg-muted transition-colors">
             <HelpCircle className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
+          <div className="h-6 w-px bg-border hidden sm:block mx-1" />
+          <ProfileMenu />
         </div>
       </header>
 
@@ -456,11 +463,15 @@ export function VerificationWorkspace({ csvState, csvFileName, answerSheetUrl, i
 
           {/* Right actions */}
           <div className="flex items-center gap-3 sm:gap-4">
+            <button onClick={onBack} className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2.5 sm:py-3.5 rounded-lg border border-border text-muted-foreground hover:bg-muted font-heading text-sm sm:text-base font-bold transition-all shadow-sm">
+              <span className="hidden sm:inline">Back</span>
+              <span className="sm:hidden">Back</span>
+            </button>
             {validationErrorCount > 0 && (
               <div className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-destructive/10 rounded-lg">
                 <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-destructive" />
                 <span className="font-heading text-xs sm:text-sm text-destructive font-bold whitespace-nowrap">
-                  {validationErrorCount}
+                  {validationErrorCount} Error{validationErrorCount !== 1 ? 's' : ''}
                 </span>
               </div>
             )}

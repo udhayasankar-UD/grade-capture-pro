@@ -66,3 +66,29 @@
     font-family: var(--font-heading);
   }
 }
+
+@layer utilities {
+  .animate-progress-loading {
+    animation: progress-loading 2s infinite ease-in-out;
+    width: 100%;
+    transform-origin: 0% 50%;
+  }
+
+  @keyframes progress-loading {
+    0% {
+      transform: scaleX(0);
+    }
+    10% {
+      transform: scaleX(0.1);
+    }
+    50% {
+      transform: scaleX(0.7);
+    }
+    90% {
+      transform: scaleX(0.9);
+    }
+    100% {
+      transform: scaleX(1);
+    }
+  }
+}

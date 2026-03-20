@@ -18,6 +18,8 @@ const Index = () => {
   const [answerSheetFile, setAnswerSheetFile] = useState<File | null>(null);
   const [answerSheetUrl, setAnswerSheetUrl] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [processingMessage, setProcessingMessage] = useState("");
+  const [abortController, setAbortController] = useState<AbortController | null>(null);
   const [extractedData, setExtractedData] = useState<MarkData | null>(null);
 
   const handleCSVUpload = useCallback(async (file: File) => {
@@ -25,6 +27,15 @@ const Index = () => {
     const text = await file.text();
     setCsvState(parseCSV(text));
   }, []);
+
+  const handleCancelProcessing = useCallback(() => {
+    if (abortController) {
+      abortController.abort();
+      setAbortController(null);
+      setIsProcessing(false);
+      toast.info("Extraction cancelled");
+    }
+  }, [abortController]);
 
   const handleImageUploadAndExtract = useCallback(async (file: File) => {
     if (credits <= 0) {
@@ -36,7 +47,11 @@ const Index = () => {
     setAnswerSheetFile(file);
     setAnswerSheetUrl(URL.createObjectURL(file));
     
+    const controller = new AbortController();
+    setAbortController(controller);
     setIsProcessing(true);
+    setProcessingMessage("Initializing AI Scanner...");
+
     let rawData;
     
     try {
@@ -50,6 +65,8 @@ const Index = () => {
 
       while (attempt < maxRetries && !success) {
         attempt++;
+        setProcessingMessage(attempt > 1 ? `Retrying... (Attempt ${attempt}/3)` : "Scanning Answer Sheet...");
+        
         try {
           const token = await auth.currentUser?.getIdToken();
           const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
@@ -59,6 +76,7 @@ const Index = () => {
               "Authorization": `Bearer ${token}`
             },
             body: formData,
+            signal: controller.signal
           });
           
           if (!res.ok) {
@@ -71,14 +89,23 @@ const Index = () => {
             throw new Error(errorMsg);
           }
           
+          setProcessingMessage("Finalizing Output...");
           rawData = await res.json();
           success = true;
         } catch (error: any) {
+          if (error.name === 'AbortError') throw error;
+          
           lastErrorMsg = error.message;
           if (attempt < maxRetries) {
              toast(`AI busy, Retrying... (${attempt}/${maxRetries} attempts)`);
              // Wait 2000 ms before retrying
-             await new Promise(resolve => setTimeout(resolve, 2000));
+             await new Promise((resolve, reject) => {
+               const timeout = setTimeout(resolve, 2000);
+               controller.signal.addEventListener('abort', () => {
+                 clearTimeout(timeout);
+                 reject(new DOMException('Aborted', 'AbortError'));
+               });
+             });
           } else {
              throw error;
           }
@@ -105,9 +132,13 @@ const Index = () => {
         }))
       };
 
+      setProcessingMessage("Complete");
+      await new Promise(resolve => setTimeout(resolve, 800));
+
       setExtractedData(markData);
       setView("workspace");
     } catch (err: any) {
+      if (err.name === 'AbortError') return;
       console.error(err);
       toast.error(err.message || "Failed to extract marks from image. Ensure Python API is running.");
       // Fallback: switch to workspace even if it fails, so they can manually enter data
@@ -115,6 +146,8 @@ const Index = () => {
       setView("workspace");
     } finally {
       setIsProcessing(false);
+      setAbortController(null);
+      setProcessingMessage("");
     }
   }, [answerSheetUrl, credits]);
 
@@ -150,7 +183,9 @@ const Index = () => {
         csvState={csvState}
         csvFileName={csvFile?.name ?? "Answer Sheet"}
         isProcessing={isProcessing}
+        processingMessage={processingMessage}
         onImageUpload={handleImageUploadAndExtract}
+        onCancel={handleCancelProcessing}
         onBack={handleBackToUpload}
       />
     );
