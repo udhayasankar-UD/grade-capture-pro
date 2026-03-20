@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+python-multipart
+python-dotenv
+opencv-python-headless
+numpy
+pillow
+google-genai
+firebase-admin
